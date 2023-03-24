@@ -9,7 +9,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   if (query.code && query.state) {
     return {
       redirect: {
-        destination: `${process.env.BACKEND_URL}/callback?client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET}&redirect_uri=${process.env.REDIRECT_URI}&state=${query.state}&code=${query.code}`,
+        destination: `${process.env.BACKEND_URL}/callback?client_id=${process.env.CLIENT_ID}&redirect_uri=${process.env.REDIRECT_URI}&state=${query.state}&code=${query.code}`,
         permanent: false
       }
     }

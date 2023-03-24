@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -39,13 +40,18 @@ Route::get('/dashboard/clients', function (Request $request) {
 
 Route::get('/redirect', function (Request $request) {
   $request->session()->put('state', $state = Str::random(40));
+  $request->session()->put('code_verifier', $code_verifier = Str::random(128));
+
+  $code_challange = strtr(rtrim(base64_encode(hash('sha256', $code_verifier, true)), '='), '+/', '-_');
 
   $query = http_build_query([
     'client_id' => $request->client_id,
     'redirect_uri' => $request->redirect_uri,
     'response_type' => 'code',
     'scope' => '',
-    'state' => $state
+    'state' => $state,
+    'code_challenge' => $code_challange,
+    'code_challenge_method' => 'S256'
   ]);
 
   return redirect('http://localhost:8000/oauth/authorize?' . $query);
@@ -53,6 +59,7 @@ Route::get('/redirect', function (Request $request) {
 
 Route::get('/callback', function (Request $request) {
   $state = $request->session()->pull('state');
+  $code_verifier = $request->session()->pull('code_verifier');
 
   throw_unless(
     strlen($state) > 0 && $state === $request->state,
@@ -60,13 +67,23 @@ Route::get('/callback', function (Request $request) {
     'Invalid state value.'
   );
 
-  $data = $request->only(['client_id', 'client_secret', 'redirect_uri', 'code']);
+  $data = $request->only(['client_id', 'redirect_uri', 'code']);
   $data['grant_type'] = 'authorization_code';
+  $data['code_verifier'] = $code_verifier;
 
   return view('callback', [
     'title' => 'Authorize',
     'data' => $data
   ]);
 });
+
+Route::post('/logout', function (Request $request) {
+  $request->user()->token()->revoke();
+  $request->user()->token()->delete();
+
+  return response()->json([
+    "message" => "Logout"
+  ], 200);
+})->middleware('auth:api');
 
 require __DIR__ . '/auth.php';

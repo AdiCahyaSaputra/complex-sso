@@ -8,7 +8,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
   const user = await getUser(access_token)
 
-  if (!user) return {
+  if (!user || !access_token) return {
     redirect: {
       destination: '/login',
       permanent: false
@@ -17,23 +17,30 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
   return {
     props: {
-      user
+      user,
+      access_token
     }
   }
 }
 
 type Props = {
-  user: any
+  user: any,
+  access_token: string
 }
 
-const Home: NextPage<Props> = ({ user }) => {
+const Home: NextPage<Props> = ({ user, access_token }) => {
 
   const router = useRouter()
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault()
 
-    await fetch('/api/cookie/destroy')
+    await fetch('/api/cookie/destroy', {
+      method: 'POST',
+      body: JSON.stringify({
+        access_token
+      })
+    })
 
     router.push('/login')
   }
