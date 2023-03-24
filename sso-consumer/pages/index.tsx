@@ -8,6 +8,13 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
   const user = await getUser(access_token)
 
+  if (!user) return {
+    redirect: {
+      destination: '/login',
+      permanent: false
+    }
+  }
+
   return {
     props: {
       user

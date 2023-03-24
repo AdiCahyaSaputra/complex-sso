@@ -1,7 +1,23 @@
-import { NextPage } from 'next'
+import { GetServerSideProps, NextPage } from 'next'
 import { FormEventHandler } from 'react'
 
-const ssoURL = 'http://localhost:8000/redirect?client_id=' + process.env.CLIENT_ID + '&redirect_uri=' + process.env.REDIRECT_URI
+const ssoURL = `${process.env.BACKEND_URL}/redirect?client_id=${process.env.CLIENT_ID}&redirect_uri=${process.env.REDIRECT_URI}`
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+
+  const { access_token, refresh_token } = ctx.req.cookies
+
+  if (access_token && refresh_token) return {
+    redirect: {
+      destination: '/',
+      permanent: false
+    }
+  }
+
+  return {
+    props: {}
+  }
+}
 
 const Login: NextPage = () => {
 
