@@ -1,12 +1,18 @@
 import { getUser } from '@/lib/fetch'
+import { refreshTokenFetcher } from '@/lib/refresh'
 import { GetServerSideProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { FormEventHandler } from 'react'
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const { access_token } = ctx.req.cookies
+  const { access_token, refresh_token } = ctx.req.cookies
 
-  const user = await getUser(access_token)
+  const user = await refreshTokenFetcher({ 
+    token: { access_token, refresh_token }, 
+    fetcher: async (access_token) => await getUser(access_token),
+    req_server: ctx.req,
+    res_server: ctx.res
+  })
 
   if (!user || !access_token) return {
     redirect: {

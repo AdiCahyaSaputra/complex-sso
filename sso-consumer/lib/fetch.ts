@@ -11,5 +11,8 @@ export const getUser = async (access_token?: string) => {
 
   const res = await req.json()
 
-  return res
+  return {
+    status: req.status,
+    ...res
+  }
 }
