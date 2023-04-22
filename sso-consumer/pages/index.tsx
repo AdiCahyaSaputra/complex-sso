@@ -7,9 +7,12 @@ import { FormEventHandler } from 'react'
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const { access_token, refresh_token } = ctx.req.cookies
 
-  const user = await refreshTokenFetcher({ 
-    token: { access_token, refresh_token }, 
-    fetcher: async (access_token) => await getUser(access_token),
+  const user = await refreshTokenFetcher({
+    token: { access_token, refresh_token },
+    fetcher: async (access_token) => {
+      const userResponse = await getUser(access_token)
+      return userResponse
+    },
     req_server: ctx.req,
     res_server: ctx.res
   })
@@ -56,7 +59,7 @@ const Home: NextPage<Props> = ({ user, access_token }) => {
       <div>
 
         <h1 className='text-2xl font-bold'>You&apos;re Logged In</h1>
-        {user && (
+        {user.email && user.name ? (
           <>
             <ul className='my-2 py-4'>
               <li className='font-bold'>{user.name}</li>
@@ -66,7 +69,7 @@ const Home: NextPage<Props> = ({ user, access_token }) => {
               <button type='submit' className='py-2 px-4 bg-red-700 hover:bg-red-800 font-bold w-full'>Logout</button>
             </form>
           </>
-        )}
+        ): ''}
 
       </div>
     </main>
